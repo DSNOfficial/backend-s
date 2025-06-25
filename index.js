@@ -124,10 +124,10 @@ postMeta(app);
 
 
 // Start Server API
-const port = 1090;
-// const port =9899;
+
+const port =9899;
 app.listen(port, () => {
-  console.log("http://localhost:" + port)
+  console.log("http://46.250.226.231:" + port)
  
 })
 
