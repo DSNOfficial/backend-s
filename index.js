@@ -125,16 +125,13 @@ postMeta(app);
 
 // Start Server API
 
-// const port =9899;
-// app.listen(port, () => {
-//   console.log("http://46.250.226.231:" + port)
+const port =9899;
+app.listen(port, () => {
+  console.log("http://46.250.226.231:" + port)
  
-// })
-const port = 9899;
-app.listen(port, '0.0.0.0', () => {
-  console.log("http://localhost:" + port);
-});
+})
 
-// app.get('/', (req, res) => {
-//   res.send('✅ Hello! You are within the rate limit.');
-// });
+
+app.get('/hello', (req, res) => {
+  res.send('✅ Hello! You are within the rate limit.');
+});
