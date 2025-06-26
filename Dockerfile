@@ -1,13 +1,8 @@
-# Dockerfile
-FROM node:18.20.2-slim
-
+FROM node:18.19.1
+ENV TZ="Asia/Bangkok"
 WORKDIR /app
-
-COPY package*.json ./
+COPY package.json package-lock.json ./
 RUN npm install
-
 COPY . .
-
 EXPOSE 9899
-
-CMD ["nodemon", "index.js"]
+CMD ["npm", "run", "start"]
