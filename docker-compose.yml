@@ -1,48 +1,35 @@
-version: "3.9"
-
 services:
   express:
     build:
       context: .
       dockerfile: Dockerfile
     volumes:
-      - ./src:/app/src
+      - ./scr:/app/scr
       - ./index.js:/app/index.js
       - ./uploads:/app/uploads
       - .env:/app/.env
+    scale: 1
     networks:
       - mysql-phpmyadmin
     ports:
       - "9899:9899"
-
-  nginx:
-    image: nginx:latest
-    container_name: nginx
-    ports:
-      - "80:80"
-    volumes:
-      - ./nginx.conf:/etc/nginx/nginx.conf:ro
-    depends_on:
-      - express
-    networks:
-      - mysql-phpmyadmin
-
   mysql:
-    image: mysql:5.7
+    image: mysql
     container_name: mysql
     volumes:
       - db_data:/var/lib/mysql
     restart: always
+    ports:
+      - "3306:3306"
     environment:
       - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
       - MYSQL_DATABASE=${DB_NAME}
       - MYSQL_PASSWORD=${DB_PASSWORD}
-    ports:
-      - "3306:3306"
     networks:
       - mysql-phpmyadmin
-
   phpmyadmin:
+    depends_on:
+      - mysql
     image: phpmyadmin
     restart: always
     ports:
@@ -50,13 +37,10 @@ services:
     environment:
       - PMA_HOST=${DB_HOST}
       - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
-    depends_on:
-      - mysql
     networks:
       - mysql-phpmyadmin
 
 networks:
   mysql-phpmyadmin:
-
 volumes:
   db_data:
