@@ -131,6 +131,9 @@ app.listen(port, () => {
  
 })
 
+app.get('/mm', (req, res) => {
+  res.send('✅ Hello! You are within the rate limit.');
+});
 
 app.get('/hello', (req, res) => {
   res.send('✅ Hello! You are within the rate limit.');
