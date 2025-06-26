@@ -1,3 +1,5 @@
+version: "3.8"  # Always define a version for clarity
+
 services:
   express:
     build:
@@ -7,14 +9,21 @@ services:
       - ./scr:/app/scr
       - ./index.js:/app/index.js
       - ./uploads:/app/uploads
-      - .env:/app/.env
-    scale: 1
-    networks:
-      - mysql-phpmyadmin
+      - ./.env:/app/.env   # add leading dot to make sure it mounts correctly
     ports:
       - "9899:9899"
+    networks:
+      - mysql-phpmyadmin
+    depends_on:
+      - mysql
+    environment:
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+      - DB_NAME=${DB_NAME}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_HOST=${DB_HOST}
+
   mysql:
-    image: mysql
+    image: mysql:8.0 # It's good to lock a version
     container_name: mysql
     volumes:
       - db_data:/var/lib/mysql
@@ -27,10 +36,11 @@ services:
       - MYSQL_PASSWORD=${DB_PASSWORD}
     networks:
       - mysql-phpmyadmin
+
   phpmyadmin:
     depends_on:
       - mysql
-    image: phpmyadmin
+    image: phpmyadmin:latest
     restart: always
     ports:
       - "8090:80"
@@ -42,5 +52,6 @@ services:
 
 networks:
   mysql-phpmyadmin:
+
 volumes:
   db_data:
