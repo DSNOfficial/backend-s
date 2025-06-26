@@ -4,7 +4,6 @@ const { logError, isEmptyOrNull, getPermissionByRoleMenu } = require("../config/
 const { ACCESS_TOKEN_KEY, REFRESH_TOKEN_KEY } = require("../config/token_key");
 const jwt = require("jsonwebtoken");
 
-
 const getList = async (req, res) => {
   try {
     // Get all roles from the database
@@ -33,6 +32,7 @@ const getList = async (req, res) => {
   }
 };
 
+
 const create = async (req, res) => {
     try {
         const image = req.file ? req.file.filename : null;
@@ -60,62 +60,6 @@ const create = async (req, res) => {
     }
 };
 
-// const update = async (req, res) => {
-//     try {
-//         const {
-//             id,
-//             RoleId,
-//             firstName,
-//             middleName,
-//             lastName,
-//             mobile,
-//             email,
-//             password,
-//             intro,
-//             profile
-//         } = req.body;
-
-//         if (!id || !RoleId || !firstName || !lastName || !mobile || !email) {
-//             return res.status(400).json({ message: "Missing required fields" });
-//         }
-
-//         // Get uploaded image filename if present
-//         const image = req.file?.filename || null;
-
-//         let sql = `
-//             UPDATE users 
-//             SET image = ?, RoleId = ?, firstName = ?, middleName = ?, lastName = ?, 
-//                 mobile = ?, email = ?, intro = ?, profile = ?
-//         `;
-
-//         const params = [
-//             image,
-//             RoleId,
-//             firstName,
-//             middleName || null,
-//             lastName,
-//             mobile,
-//             email,
-//             intro || null,
-//             profile || null
-//         ];
-
-//         if (password) {
-//             const hashedPassword = await bcrypt.hash(password, 10);
-//             sql += `, Password = ?`;
-//             params.push(hashedPassword);
-//         }
-
-//         sql += ` WHERE id = ?`;
-//         params.push(id);
-
-//         const [data] = await db.query(sql, params);
-
-//         res.json({ message: data.affectedRows !== 0 ? "Update successful" : "User not found", data });
-//     } catch (err) {
-//         logError("users.update", err, res);
-//     }
-// };
 
 const update = async (req, res) => {
     try {
@@ -261,7 +205,7 @@ const refresh_token = async (req, res) => {
     }
 };
 
-// const CheckToken = () => {
+
 //     return (req, res, next) => {
 //         const authorization = req.headers.authorization;
 //         let tokenFromClient = null;
