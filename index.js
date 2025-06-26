@@ -126,10 +126,10 @@ postMeta(app);
 // Start Server API
 
 const port =9899;
-app.listen(port, () => {
-  console.log("http://46.250.226.231:" + port)
- 
-})
+app.listen(port, '0.0.0.0', () => {
+  console.log("http://0.0.0.0:" + port);
+});
+
 
 app.get('/mm', (req, res) => {
   res.send('✅ Hello! You are within the rate limit.');
