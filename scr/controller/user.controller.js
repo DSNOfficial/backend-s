@@ -6,36 +6,33 @@ const jwt = require("jsonwebtoken");
 
 
 const getList = async (req, res) => {
-    try {
-        // Query to get roles
-        let sql1 = "SELECT u.*, r.name AS RoleName, r.code AS RoleCode FROM users u JOIN role r ON u.RoleId = r.id WHERE u.id = ?";
-        const [role] = await db.query(sql1);
+  try {
+    // Get all roles from the database
+    const [role] = await db.query("SELECT id, name, code FROM role");
 
-        // Initialize search parameters
-        const { txt_search } = req.query;
-        let sql = "SELECT * FROM users WHERE 1=1";   
-        let sqlWhere = "";
-        let param = {};
+    // Initialize parameters and search filters
+    const { txt_search } = req.query;
+    let sql = "SELECT * FROM users WHERE 1=1";
+    const param = {};
 
-        // Check if search text is provided and not empty
-        if (!isEmptyOrNull(txt_search)) {
-            sqlWhere += " AND (firstName LIKE :txt_search OR mobile LIKE :txt_search OR RoleId LIKE :txt_search)";
-            param["txt_search"] = `%${txt_search}%`;
-        }
-       
-        // Construct the final query
-        sql = sql + sqlWhere + " ORDER BY id DESC";
-        const [list] = await db.query(sql, param);
-    
-        // Send the response
-        res.json({
-            role: role,
-            list: list,
-        });
-    } catch (err) {
-        logError("users.getList", err, res);
+    if (!isEmptyOrNull(txt_search)) {
+      sql += " AND (firstName LIKE :txt_search OR mobile LIKE :txt_search OR RoleId LIKE :txt_search)";
+      param.txt_search = `%${txt_search}%`;
     }
-}
+
+    sql += " ORDER BY id DESC";
+
+    const [list] = await db.query(sql, param);
+
+    res.json({
+      role,
+      list,
+    });
+  } catch (err) {
+    logError("users.getList", err, res);
+  }
+};
+
 const create = async (req, res) => {
     try {
         const image = req.file ? req.file.filename : null;
