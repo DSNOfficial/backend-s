@@ -3,7 +3,11 @@ const multer = require("multer");
 const moment = require("moment");
 const {config} = require("./config");
 
-const path = require('path'); // ✅ Required for path.join
+// const path = require('path'); // ✅ Required for path.join
+
+const path = require('path');
+app.use(express.static(path.join(__dirname, 'public')));
+
 // const uploads = multer({ dest: 'uploads/' })
 
 
