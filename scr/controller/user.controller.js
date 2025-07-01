@@ -33,6 +33,37 @@ const getList = async (req, res) => {
 };
 
 
+// const getList = async (req, res) => {
+//     try {
+//         // Query to get roles
+//         let sql1 = "SELECT u.*, r.name AS RoleName, r.code AS RoleCode FROM users u JOIN role r ON u.RoleId = r.id WHERE u.id = ?";
+//         const [role] = await db.query(sql1);
+
+//         // Initialize search parameters
+//         const { txt_search } = req.query;
+//         let sql = "SELECT * FROM users WHERE 1=1";   
+//         let sqlWhere = "";
+//         let param = {};
+
+//         // Check if search text is provided and not empty
+//         if (!isEmptyOrNull(txt_search)) {
+//             sqlWhere += " AND (firstName LIKE :txt_search OR mobile LIKE :txt_search OR RoleId LIKE :txt_search)";
+//             param["txt_search"] = `%${txt_search}%`;
+//         }
+       
+//         // Construct the final query
+//         sql = sql + sqlWhere + " ORDER BY id DESC";
+//         const [list] = await db.query(sql, param);
+    
+//         // Send the response
+//         res.json({
+//             role: role,
+//             list: list,
+//         });
+//     } catch (err) {
+//         logError("users.getList", err, res);
+//     }
+// }
 const create = async (req, res) => {
     try {
         const image = req.file ? req.file.filename : null;
@@ -40,6 +71,10 @@ const create = async (req, res) => {
 
         if (!image ||!RoleId || !firstName || !lastName || !mobile || !email || !Password) {
             return res.status(400).json({ message: "Missing required fields" });
+        }
+         const message = {}; // Empty object
+        if (isEmptyOrNull(image)) {
+            message.image = "image required!";
         }
 
         const hashedPassword = await bcrypt.hash(Password, 10);
@@ -60,75 +95,170 @@ const create = async (req, res) => {
     }
 };
 
-
 const update = async (req, res) => {
-    try {
-        const {
-            id,
-            RoleId,
-            firstName,
-            middleName,
-            lastName,
-            mobile,
-            email,
-            password,
-            intro,
-            profile
-        } = req.body;
+  try {
+    const {
+      id,
+      RoleId,
+      firstName,
+      middleName,
+      lastName,
+      mobile,
+      email,
+      password,
+      intro,
+      profile,
+      remove_image
+    } = req.body;
 
-        if (!id || !RoleId || !firstName || !lastName || !mobile || !email) {
-            return res.status(400).json({ message: "Missing required fields" });
-        }
-
-        const fields = [];
-        const params = [];
-
-        // Conditionally include image if uploaded
-        if (req.file) {
-            fields.push("image = ?");
-            params.push(req.file.filename);
-        }
-
-        fields.push("RoleId = ?");
-        params.push(RoleId);
-
-        fields.push("firstName = ?");
-        params.push(firstName);
-
-        fields.push("middleName = ?");
-        params.push(middleName || null);
-
-        fields.push("lastName = ?");
-        params.push(lastName);
-
-        fields.push("mobile = ?");
-        params.push(mobile);
-
-        fields.push("email = ?");
-        params.push(email);
-
-        fields.push("intro = ?");
-        params.push(intro || null);
-
-        fields.push("profile = ?");
-        params.push(profile || null);
-
-        if (password) {
-            const hashedPassword = await bcrypt.hash(password, 10);
-            fields.push("Password = ?");
-            params.push(hashedPassword);
-        }
-
-        const sql = `UPDATE users SET ${fields.join(", ")} WHERE id = ?`;
-        params.push(id);
-
-        const [data] = await db.query(sql, params);
-
-        res.json({ message: data.affectedRows !== 0 ? "Update successful" : "User not found", data });
-    } catch (err) {
-        logError("users.update", err, res);
+    // ✅ Validate required fields
+    const requiredFields = { id, RoleId, firstName, lastName, mobile, email };
+    for (const [key, value] of Object.entries(requiredFields)) {
+      if (!value) {
+        return res.status(400).json({ message: `Missing required field: ${key}` });
+      }
     }
+
+    const fields = [];
+    const params = [];
+
+    // ✅ Handle image upload/removal
+    if (req.file) {
+      fields.push("image = ?");
+      params.push(req.file.filename);
+    } else if (remove_image === "1") {
+      fields.push("image = NULL");
+    }
+
+    // ✅ Append normal fields
+    const updateFields = {
+      RoleId,
+      firstName,
+      middleName: middleName || null,
+      lastName,
+      mobile,
+      email,
+      intro: intro || null,
+      profile: profile || null,
+    };
+
+    for (const [key, value] of Object.entries(updateFields)) {
+      fields.push(`${key} = ?`);
+      params.push(value);
+    }
+
+    // ✅ Append password if updating
+    if (password) {
+      const hashedPassword = await bcrypt.hash(password, 10);
+      fields.push("Password = ?");
+      params.push(hashedPassword);
+    }
+
+    const sql = `UPDATE users SET ${fields.join(", ")} WHERE id = ?`;
+    params.push(id);
+
+    const [data] = await db.query(sql, params);
+
+    return res.json({
+      message: data.affectedRows !== 0 ? "Update successful" : "User not found",
+      data
+    });
+  } catch (err) {
+    logError("users.update", err, res);
+  }
 };
+
+
+// const create = (req, res) => {
+//   upload(req, res, async function (err) {
+//     if (err) {
+//       if (err.code === 'ENOENT') {
+//         return res.status(500).json({ message: "Upload folder not found" });
+//       }
+//       return res.status(500).json({ message: "File upload error", error: err.message });
+//     }
+
+//     try {
+//       const image = req.file ? req.file.filename : null;
+//       const { RoleId, firstName, middleName, lastName, mobile, email, intro, profile, Password } = req.body;
+
+//       if (!image || !RoleId || !firstName || !lastName || !mobile || !email || !Password) {
+//         return res.status(400).json({ message: "Missing required fields" });
+//       }
+
+//       const hashedPassword = await bcrypt.hash(Password, 10);
+
+//       const sql = `INSERT INTO users (image, RoleId, firstName, middleName, lastName, mobile, email, intro, profile, Password) 
+//                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+
+//       const params = [image, RoleId, firstName, middleName, lastName, mobile, email, intro, profile, hashedPassword];
+
+//       const [data] = await db.query(sql, params);
+//       res.json({ message: 'User created successfully', data });
+//     } catch (err) {
+//       logError("users.create", err, res);
+//     }
+//   });
+// };
+
+// const update = async (req, res) => {
+//     try {
+//         const {
+//             id,
+//             RoleId,
+//             firstName,
+//             middleName,
+//             lastName,
+//             mobile,
+//             email,
+//             password,
+//             intro,
+//             profile
+//         } = req.body;
+
+//         if (!id || !RoleId || !firstName || !lastName || !mobile || !email) {
+//             return res.status(400).json({ message: "Missing required fields" });
+//         }
+
+//         // Get uploaded image filename if present
+//         const image = req.file?.filename || null;
+
+//         let sql = `
+//             UPDATE users 
+//             SET image = ?, RoleId = ?, firstName = ?, middleName = ?, lastName = ?, 
+//                 mobile = ?, email = ?, intro = ?, profile = ?
+//         `;
+
+//         const params = [
+//             image,
+//             RoleId,
+//             firstName,
+//             middleName || null,
+//             lastName,
+//             mobile,
+//             email,
+//             intro || null,
+//             profile || null
+//         ];
+
+//         if (password) {
+//             const hashedPassword = await bcrypt.hash(password, 10);
+//             sql += `, Password = ?`;
+//             params.push(hashedPassword);
+//         }
+
+//         sql += ` WHERE id = ?`;
+//         params.push(id);
+
+//         const [data] = await db.query(sql, params);
+
+//         res.json({ message: data.affectedRows !== 0 ? "Update successful" : "User not found", data });
+//     } catch (err) {
+//         logError("users.update", err, res);
+//     }
+// };
+
+
 
 const remove = async (req, res) => {
     try {
@@ -205,7 +335,7 @@ const refresh_token = async (req, res) => {
     }
 };
 
-
+// const CheckToken = () => {
 //     return (req, res, next) => {
 //         const authorization = req.headers.authorization;
 //         let tokenFromClient = null;
